@@ -123,3 +123,6 @@ Version 1.12 change: the number-row key 1 (۱ in Persian mode / 1 in English mod
 - The symbols grid now uses the same decoding path as the other symbol grids, so hexadecimal/code-point text is not shown instead of the real symbol.
 - Existing built-in Persian and English suggestion lists were removed from this version.
 - Existing saved predictor data from older versions is cleared once on first launch of v1.15.
+
+### Mouse control
+The top toolbar pointer button `➤` opens the mouse/pointer control panel. It provides repeated directional movement, left/right click controls, and page up/down scrolling controls without adding a new button to the main keyboard layout.
