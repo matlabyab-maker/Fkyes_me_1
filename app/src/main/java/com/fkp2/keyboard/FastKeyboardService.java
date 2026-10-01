@@ -211,57 +211,39 @@ public class FastKeyboardService extends InputMethodService {
         box.setBackgroundColor(CREAM);
 
         TextView title=new TextView(this);
-        title.setText("موس / نشانگر");
+        title.setText("موس صفحه / نشانگر سیستمی");
         title.setTextSize(16);
         title.setTextColor(NAVY);
         title.setGravity(Gravity.CENTER);
         box.addView(title,new LinearLayout.LayoutParams(-1,dp(38)));
 
-        // Touch-control field: the pointer is drawn inside this field and follows finger movement.
         final FrameLayout touchPad=new FrameLayout(this);
         touchPad.setBackground(makeBg(Color.rgb(232,236,242)));
-        touchPad.setClickable(true);
-        touchPad.setFocusable(true);
         LinearLayout.LayoutParams padParams=new LinearLayout.LayoutParams(-1,dp(150));
         padParams.setMargins(4,4,4,6);
         box.addView(touchPad,padParams);
 
-        final TextView pointer=new TextView(this);
-        pointer.setText("➤");
-        pointer.setTextSize(30);
-        pointer.setTextColor(NAVY);
-        pointer.setGravity(Gravity.CENTER);
-        pointer.setBackground(makeBg(Color.WHITE));
-        FrameLayout.LayoutParams pointerParams=new FrameLayout.LayoutParams(dp(46),dp(46));
-        pointerParams.leftMargin=dp(105);
-        pointerParams.topMargin=dp(52);
-        touchPad.addView(pointer,pointerParams);
+        TextView localHint=new TextView(this);
+        localHint.setText("میدان لمسی موس — حرکت نشانگر روی کل صفحه");
+        localHint.setTextSize(14);
+        localHint.setTextColor(NAVY);
+        localHint.setGravity(Gravity.CENTER);
+        touchPad.addView(localHint,new FrameLayout.LayoutParams(-1,-1));
 
-        final int[] last={0,0};
+        final float[] last={0,0};
         final boolean[] dragging={false};
         touchPad.setOnTouchListener((v,e)->{
             if(e.getAction()==MotionEvent.ACTION_DOWN){
-                last[0]=(int)e.getX(); last[1]=(int)e.getY();
+                last[0]=e.getX(); last[1]=e.getY();
                 dragging[0]=true;
                 return true;
             }
             if(e.getAction()==MotionEvent.ACTION_MOVE && dragging[0]){
-                int dx=(int)e.getX()-last[0];
-                int dy=(int)e.getY()-last[1];
-                int step=dp(9);
-                if(Math.abs(dx)>=step || Math.abs(dy)>=step){
-                    int countX=Math.max(-4,Math.min(4,dx/step));
-                    int countY=Math.max(-4,Math.min(4,dy/step));
-                    for(int i=0;i<Math.abs(countX);i++) sendKey(countX>0?KeyEvent.KEYCODE_DPAD_RIGHT:KeyEvent.KEYCODE_DPAD_LEFT);
-                    for(int i=0;i<Math.abs(countY);i++) sendKey(countY>0?KeyEvent.KEYCODE_DPAD_DOWN:KeyEvent.KEYCODE_DPAD_UP);
-                    int maxX=Math.max(0,touchPad.getWidth()-pointer.getWidth());
-                    int maxY=Math.max(0,touchPad.getHeight()-pointer.getHeight());
-                    int nx=Math.max(0,Math.min(maxX,pointerParams.leftMargin+dx));
-                    int ny=Math.max(0,Math.min(maxY,pointerParams.topMargin+dy));
-                    pointerParams.leftMargin=nx;
-                    pointerParams.topMargin=ny;
-                    pointer.setLayoutParams(pointerParams);
-                    last[0]=(int)e.getX(); last[1]=(int)e.getY();
+                float dx=e.getX()-last[0];
+                float dy=e.getY()-last[1];
+                if(Math.abs(dx)>=1 || Math.abs(dy)>=1){
+                    MouseAccessibilityService.moveRelativeFromKeyboard(dx*2.0f,dy*2.0f);
+                    last[0]=e.getX(); last[1]=e.getY();
                 }
                 return true;
             }
@@ -279,6 +261,8 @@ public class FastKeyboardService extends InputMethodService {
         buttons.addView(leftClick,weight(1));
         buttons.addView(rightClick,weight(1));
         box.addView(buttons,new LinearLayout.LayoutParams(-1,dp(58)));
+        leftClick.setOnClickListener(v->MouseAccessibilityService.clickFromKeyboard(false));
+        rightClick.setOnClickListener(v->MouseAccessibilityService.clickFromKeyboard(true));
 
         LinearLayout nav=new LinearLayout(this);
         nav.setOrientation(LinearLayout.HORIZONTAL);
@@ -286,41 +270,42 @@ public class FastKeyboardService extends InputMethodService {
         Button down=key("↓",25,BLUE,CREAM);
         Button left=key("←",25,BLUE,CREAM);
         Button right=key("→",25,BLUE,CREAM);
-        nav.addView(left,weight(1));
-        nav.addView(up,weight(1));
-        nav.addView(down,weight(1));
-        nav.addView(right,weight(1));
+        nav.addView(left,weight(1)); nav.addView(up,weight(1));
+        nav.addView(down,weight(1)); nav.addView(right,weight(1));
         box.addView(nav,new LinearLayout.LayoutParams(-1,dp(54)));
 
+        addSystemMouseRepeat(up,-1,0);
+        addSystemMouseRepeat(down,1,0);
+        addSystemMouseRepeat(left,0,-1);
+        addSystemMouseRepeat(right,0,1);
+
         TextView hint=new TextView(this);
-        hint.setText("میدان لمسی برای حرکت نشانگر — دکمه‌های چپ و راست برای کلیک");
+        hint.setText("نشانگر روی صفحه واقعی حرکت می‌کند؛ برای فعال‌سازی، موس سیستمی FKP_2 را در Accessibility روشن کنید.");
         hint.setTextSize(11);
         hint.setTextColor(NAVY);
         hint.setGravity(Gravity.CENTER);
-        box.addView(hint,new LinearLayout.LayoutParams(-1,dp(32)));
-
-        addArrowRepeat(up,KeyEvent.KEYCODE_DPAD_UP);
-        addArrowRepeat(down,KeyEvent.KEYCODE_DPAD_DOWN);
-        addArrowRepeat(left,KeyEvent.KEYCODE_DPAD_LEFT);
-        addArrowRepeat(right,KeyEvent.KEYCODE_DPAD_RIGHT);
-
-        leftClick.setOnClickListener(v->sendMouseButton(KeyEvent.KEYCODE_BUTTON_1));
-        rightClick.setOnClickListener(v->sendMouseButton(KeyEvent.KEYCODE_BUTTON_2));
+        box.addView(hint,new LinearLayout.LayoutParams(-1,dp(45)));
 
         activePopup=new PopupWindow(box,dp(330),dp(390),true);
         stylePopup(activePopup);
         showPopupAbove(anchor,activePopup,dp(390));
     }
 
-    private void sendMouseButton(int code){
-        InputConnection ic=getCurrentInputConnection();
-        if(ic!=null){
-            long now=android.os.SystemClock.uptimeMillis();
-            KeyEvent down=new KeyEvent(now,now,KeyEvent.ACTION_DOWN,code,0,0);
-            KeyEvent up=new KeyEvent(now,now,KeyEvent.ACTION_UP,code,0,0);
-            ic.sendKeyEvent(down);
-            ic.sendKeyEvent(up);
-        }
+    private void addSystemMouseRepeat(Button b,float dy,float dx){
+        final Runnable[] r={null};
+        r[0]=()->{MouseAccessibilityService.moveRelativeFromKeyboard(dx*18f,dy*18f);handler.postDelayed(r[0],90);};
+        b.setOnTouchListener((v,e)->{
+            if(e.getAction()==MotionEvent.ACTION_DOWN){
+                MouseAccessibilityService.moveRelativeFromKeyboard(dx*18f,dy*18f);
+                handler.postDelayed(r[0],350);
+                return true;
+            }
+            if(e.getAction()==MotionEvent.ACTION_UP || e.getAction()==MotionEvent.ACTION_CANCEL){
+                handler.removeCallbacks(r[0]);
+                return true;
+            }
+            return true;
+        });
     }
 
     private void showEmoji(View anchor){int[] loc=popupLocation(anchor);dismissPopup();ScrollView sv=scrollBox();LinearLayout box=gridContainer(sv);addGrid(box,EMOJIS,40);addGrid(box,FLAGS,40);activePopup=new PopupWindow(sv,dp(330),dp(420),true);stylePopup(activePopup);showPopupAt(activePopup,loc[0],loc[1],420);}

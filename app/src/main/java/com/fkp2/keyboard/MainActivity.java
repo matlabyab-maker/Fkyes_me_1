@@ -40,6 +40,12 @@ public class MainActivity extends Activity {
         settings.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)));
         box.addView(settings, new LinearLayout.LayoutParams(-1, 64));
 
+        Button accessibility = new Button(this);
+        accessibility.setText("فعال‌سازی موس سیستمی");
+        accessibility.setOnClickListener(v ->
+            startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+        box.addView(accessibility, new LinearLayout.LayoutParams(-1, 64));
+
         Button picker = new Button(this);
         picker.setText("انتخاب کیبورد");
         picker.setOnClickListener(v -> {
