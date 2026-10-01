@@ -147,23 +147,11 @@ public class MouseAccessibilityService extends AccessibilityService {
         takeScreenshot(0, getMainExecutor(), new TakeScreenshotCallback() {
             @Override public void onSuccess(ScreenshotResult result) {
                 try {
-                    android.hardware.HardwareBuffer hb = result.getHardwareBuffer();
-                    android.graphics.ColorSpace cs = result.getColorSpace();
-                    Bitmap b = null;
-                    if (hb != null) {
-                        Bitmap hw = Bitmap.wrapHardwareBuffer(hb, cs);
-                        if (hw != null) {
-                            b = hw.copy(Bitmap.Config.ARGB_8888, false);
-                            hw.recycle();
-                        }
-                        hb.close();
-                    }
-                    if (b != null) {
-                        int px = Math.max(0, Math.min(b.getWidth()-1, Math.round(x + cursorSize/2f)));
-                        int py = Math.max(0, Math.min(b.getHeight()-1, Math.round(y + cursorSize/2f)));
-                        updateCursorAppearance(b.getPixel(px, py));
-                        b.recycle();
-                    }
+                    Bitmap b = result.getBitmap();
+                    int px = Math.max(0, Math.min(b.getWidth()-1, Math.round(x + cursorSize/2f)));
+                    int py = Math.max(0, Math.min(b.getHeight()-1, Math.round(y + cursorSize/2f)));
+                    updateCursorAppearance(b.getPixel(px, py));
+                    b.recycle();
                 } finally {
                     screenshotBusy = false;
                 }
