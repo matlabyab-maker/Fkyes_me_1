@@ -304,8 +304,8 @@ public class FastKeyboardService extends InputMethodService {
         addArrowRepeat(left,KeyEvent.KEYCODE_DPAD_LEFT);
         addArrowRepeat(right,KeyEvent.KEYCODE_DPAD_RIGHT);
 
-        leftClick.setOnClickListener(v->sendMouseButton(KeyEvent.KEYCODE_BUTTON_PRIMARY));
-        rightClick.setOnClickListener(v->sendMouseButton(KeyEvent.KEYCODE_BUTTON_SECONDARY));
+        leftClick.setOnClickListener(v->sendMouseButton(KeyEvent.KEYCODE_BUTTON_1));
+        rightClick.setOnClickListener(v->sendMouseButton(KeyEvent.KEYCODE_BUTTON_2));
 
         activePopup=new PopupWindow(box,dp(330),dp(390),true);
         stylePopup(activePopup);
