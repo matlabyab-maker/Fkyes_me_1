@@ -225,8 +225,7 @@ public class FastKeyboardService extends InputMethodService {
 
         LinearLayout r2=new LinearLayout(this);
         Button left=key("←",25,BLUE,CREAM);
-        Button click=key("کلیک
-چپ",14,NAVY,CREAM);
+        Button click=key("کلیک چپ",14,NAVY,CREAM);
         Button right=key("→",25,BLUE,CREAM);
         r2.addView(left,weight(1)); r2.addView(click,weight(1.35f)); r2.addView(right,weight(1));
         box.addView(r2,new LinearLayout.LayoutParams(-1,dp(60)));
@@ -234,8 +233,7 @@ public class FastKeyboardService extends InputMethodService {
         LinearLayout r3=new LinearLayout(this);
         Button wheelDown=key("▼",18,BLUE,CREAM);
         Button down=key("↓",25,BLUE,CREAM);
-        Button rightClick=key("کلیک
-راست",14,NAVY,CREAM);
+        Button rightClick=key("کلیک راست",14,NAVY,CREAM);
         r3.addView(wheelDown,weight(1)); r3.addView(down,weight(1)); r3.addView(rightClick,weight(1.35f));
         box.addView(r3,new LinearLayout.LayoutParams(-1,dp(60)));
 
