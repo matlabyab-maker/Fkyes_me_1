@@ -14,6 +14,7 @@ import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.view.Gravity;
+import android.widget.FrameLayout;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -208,6 +209,7 @@ public class FastKeyboardService extends InputMethodService {
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(8,8,8,8);
         box.setBackgroundColor(CREAM);
+
         TextView title=new TextView(this);
         title.setText("موس / نشانگر");
         title.setTextSize(16);
@@ -215,45 +217,110 @@ public class FastKeyboardService extends InputMethodService {
         title.setGravity(Gravity.CENTER);
         box.addView(title,new LinearLayout.LayoutParams(-1,dp(38)));
 
-        LinearLayout r1=new LinearLayout(this);
+        // Touch-control field: the pointer is drawn inside this field and follows finger movement.
+        final FrameLayout touchPad=new FrameLayout(this);
+        touchPad.setBackground(makeBg(Color.rgb(232,236,242)));
+        touchPad.setClickable(true);
+        touchPad.setFocusable(true);
+        LinearLayout.LayoutParams padParams=new LinearLayout.LayoutParams(-1,dp(150));
+        padParams.setMargins(4,4,4,6);
+        box.addView(touchPad,padParams);
+
+        final TextView pointer=new TextView(this);
+        pointer.setText("➤");
+        pointer.setTextSize(30);
+        pointer.setTextColor(NAVY);
+        pointer.setGravity(Gravity.CENTER);
+        pointer.setBackground(makeBg(Color.WHITE));
+        FrameLayout.LayoutParams pointerParams=new FrameLayout.LayoutParams(dp(46),dp(46));
+        pointerParams.leftMargin=dp(105);
+        pointerParams.topMargin=dp(52);
+        touchPad.addView(pointer,pointerParams);
+
+        final int[] last={0,0};
+        final boolean[] dragging={false};
+        touchPad.setOnTouchListener((v,e)->{
+            if(e.getAction()==MotionEvent.ACTION_DOWN){
+                last[0]=(int)e.getX(); last[1]=(int)e.getY();
+                dragging[0]=true;
+                return true;
+            }
+            if(e.getAction()==MotionEvent.ACTION_MOVE && dragging[0]){
+                int dx=(int)e.getX()-last[0];
+                int dy=(int)e.getY()-last[1];
+                int step=dp(9);
+                if(Math.abs(dx)>=step || Math.abs(dy)>=step){
+                    int countX=Math.max(-4,Math.min(4,dx/step));
+                    int countY=Math.max(-4,Math.min(4,dy/step));
+                    for(int i=0;i<Math.abs(countX);i++) sendKey(countX>0?KeyEvent.KEYCODE_DPAD_RIGHT:KeyEvent.KEYCODE_DPAD_LEFT);
+                    for(int i=0;i<Math.abs(countY);i++) sendKey(countY>0?KeyEvent.KEYCODE_DPAD_DOWN:KeyEvent.KEYCODE_DPAD_UP);
+                    int maxX=Math.max(0,touchPad.getWidth()-pointer.getWidth());
+                    int maxY=Math.max(0,touchPad.getHeight()-pointer.getHeight());
+                    int nx=Math.max(0,Math.min(maxX,pointerParams.leftMargin+dx));
+                    int ny=Math.max(0,Math.min(maxY,pointerParams.topMargin+dy));
+                    pointerParams.leftMargin=nx;
+                    pointerParams.topMargin=ny;
+                    pointer.setLayoutParams(pointerParams);
+                    last[0]=(int)e.getX(); last[1]=(int)e.getY();
+                }
+                return true;
+            }
+            if(e.getAction()==MotionEvent.ACTION_UP || e.getAction()==MotionEvent.ACTION_CANCEL){
+                dragging[0]=false;
+                return true;
+            }
+            return true;
+        });
+
+        LinearLayout buttons=new LinearLayout(this);
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        Button leftClick=key("کلیک چپ",15,NAVY,CREAM);
+        Button rightClick=key("کلیک راست",15,NAVY,CREAM);
+        buttons.addView(leftClick,weight(1));
+        buttons.addView(rightClick,weight(1));
+        box.addView(buttons,new LinearLayout.LayoutParams(-1,dp(58)));
+
+        LinearLayout nav=new LinearLayout(this);
+        nav.setOrientation(LinearLayout.HORIZONTAL);
         Button up=key("↑",25,BLUE,CREAM);
-        Button wheelUp=key("▲",18,BLUE,CREAM);
-        r1.addView(wheelUp,weight(1));
-        r1.addView(up,weight(1));
-        r1.addView(key("",18,NAVY,CREAM),weight(1));
-        box.addView(r1,new LinearLayout.LayoutParams(-1,dp(52)));
-
-        LinearLayout r2=new LinearLayout(this);
-        Button left=key("←",25,BLUE,CREAM);
-        Button click=key("کلیک چپ",14,NAVY,CREAM);
-        Button right=key("→",25,BLUE,CREAM);
-        r2.addView(left,weight(1)); r2.addView(click,weight(1.35f)); r2.addView(right,weight(1));
-        box.addView(r2,new LinearLayout.LayoutParams(-1,dp(60)));
-
-        LinearLayout r3=new LinearLayout(this);
-        Button wheelDown=key("▼",18,BLUE,CREAM);
         Button down=key("↓",25,BLUE,CREAM);
-        Button rightClick=key("کلیک راست",14,NAVY,CREAM);
-        r3.addView(wheelDown,weight(1)); r3.addView(down,weight(1)); r3.addView(rightClick,weight(1.35f));
-        box.addView(r3,new LinearLayout.LayoutParams(-1,dp(60)));
+        Button left=key("←",25,BLUE,CREAM);
+        Button right=key("→",25,BLUE,CREAM);
+        nav.addView(left,weight(1));
+        nav.addView(up,weight(1));
+        nav.addView(down,weight(1));
+        nav.addView(right,weight(1));
+        box.addView(nav,new LinearLayout.LayoutParams(-1,dp(54)));
 
         TextView hint=new TextView(this);
-        hint.setText("حرکت نشانگر و کنترل مکان‌نما");
-        hint.setTextSize(12); hint.setTextColor(NAVY); hint.setGravity(Gravity.CENTER);
-        box.addView(hint,new LinearLayout.LayoutParams(-1,dp(30)));
+        hint.setText("میدان لمسی برای حرکت نشانگر — دکمه‌های چپ و راست برای کلیک");
+        hint.setTextSize(11);
+        hint.setTextColor(NAVY);
+        hint.setGravity(Gravity.CENTER);
+        box.addView(hint,new LinearLayout.LayoutParams(-1,dp(32)));
 
         addArrowRepeat(up,KeyEvent.KEYCODE_DPAD_UP);
+        addArrowRepeat(down,KeyEvent.KEYCODE_DPAD_DOWN);
         addArrowRepeat(left,KeyEvent.KEYCODE_DPAD_LEFT);
         addArrowRepeat(right,KeyEvent.KEYCODE_DPAD_RIGHT);
-        addArrowRepeat(down,KeyEvent.KEYCODE_DPAD_DOWN);
-        wheelUp.setOnClickListener(v->sendKey(KeyEvent.KEYCODE_PAGE_UP));
-        wheelDown.setOnClickListener(v->sendKey(KeyEvent.KEYCODE_PAGE_DOWN));
-        click.setOnClickListener(v->sendKey(KeyEvent.KEYCODE_DPAD_CENTER));
-        rightClick.setOnClickListener(v->sendKey(KeyEvent.KEYCODE_ENTER));
 
-        activePopup=new PopupWindow(box,dp(300),dp(300),true);
+        leftClick.setOnClickListener(v->sendMouseButton(KeyEvent.KEYCODE_BUTTON_PRIMARY));
+        rightClick.setOnClickListener(v->sendMouseButton(KeyEvent.KEYCODE_BUTTON_SECONDARY));
+
+        activePopup=new PopupWindow(box,dp(330),dp(390),true);
         stylePopup(activePopup);
-        showPopupAbove(anchor,activePopup,dp(300));
+        showPopupAbove(anchor,activePopup,dp(390));
+    }
+
+    private void sendMouseButton(int code){
+        InputConnection ic=getCurrentInputConnection();
+        if(ic!=null){
+            long now=android.os.SystemClock.uptimeMillis();
+            KeyEvent down=new KeyEvent(now,now,KeyEvent.ACTION_DOWN,code,0,0);
+            KeyEvent up=new KeyEvent(now,now,KeyEvent.ACTION_UP,code,0,0);
+            ic.sendKeyEvent(down);
+            ic.sendKeyEvent(up);
+        }
     }
 
     private void showEmoji(View anchor){int[] loc=popupLocation(anchor);dismissPopup();ScrollView sv=scrollBox();LinearLayout box=gridContainer(sv);addGrid(box,EMOJIS,40);addGrid(box,FLAGS,40);activePopup=new PopupWindow(sv,dp(330),dp(420),true);stylePopup(activePopup);showPopupAt(activePopup,loc[0],loc[1],420);}

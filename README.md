@@ -125,4 +125,4 @@ Version 1.12 change: the number-row key 1 (۱ in Persian mode / 1 in English mod
 - Existing saved predictor data from older versions is cleared once on first launch of v1.15.
 
 ### Mouse control
-The top toolbar pointer button `➤` opens the mouse/pointer control panel. It provides repeated directional movement, left/right click controls, and page up/down scrolling controls without adding a new button to the main keyboard layout.
+The top toolbar pointer button `➤` opens the mouse/pointer control panel. It contains a touch-control field with a visible pointer, four directional controls, and separate left/right click buttons. Finger movement inside the field moves the visible pointer and sends directional cursor events; the click buttons send primary/secondary mouse-button key events. No new button is added to the main keyboard layout.
